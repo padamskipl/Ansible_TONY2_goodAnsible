@@ -5,11 +5,6 @@
   gather_facts: false
   become:       true
 
-#  tasks:
-#  - name: task_run_whoami
-#    command:
-#      cmd: whoami
-
   tasks:
 
   - name: P_config_T_set_up_YUM_repo
@@ -18,5 +13,83 @@
       dest:     /etc/yum.repos.d/open_three-tier-app.repo
       mode:     0644
 
+# END: P_config
 
+- name: P_ha_proxy
+  hosts:        frontends
+  gather_facts: false
+  become:       true
 
+  tasks:
+
+  - name: P_ha_proxy_T_httpie
+    package:
+      name:     httpie
+      state:    latest
+
+  - name: P_ha_proxy_T_install_proxy
+    package:
+      name:     haproxy
+      state:    latest
+
+  - name: P_ha_proxy_T_enable_proxy_service
+    service:
+      name:     haproxy
+      state:    started
+      enabled:  yes
+
+  - name: P_ha_proxy_T_configure_proxy
+    template:
+      src:      ./haproxy.cfg.j2
+      dest:     /etc/haproxy/haproxy.cfg
+    notify:   P_ha_proxy_H_restart_proxy
+
+  handlers:
+
+  - name: P_ha_proxy_H_restart_proxy
+    service:
+      name:     haproxy
+      state:    restarted
+
+# END: P_ha_proxy
+
+- name: P_tomcat
+  hosts:        apps
+  gather_facts: false
+  become:       true
+
+  tasks:
+
+  - name: P_tomcat_T_install_tomcat
+    package:
+      name:     tomcat
+      state:    latest
+
+  - name: P_tomcat_T_welcome_page_dir
+    file:
+      path:     /usr/share/tomcat/webapps/ROOT
+      state:    directory
+      mode: 0644
+
+  - name: P_tomcat_T_welcome_page_file
+    template:
+      src:      ./index.html.j2
+      dest:     /usr/share/tomcat/webapps/ROOT/index.html
+      backup:   true
+      mode:     0644      
+    notify:     P_tomcat_H_restart
+
+  - name: P_tomcat_T_enable_service
+    service:
+      name:     tomcat
+      state:    started
+      enabled:  yes
+
+  handlers:
+
+  - name: P_tomcat_H_restart
+    service:
+      name:     tomcat
+      state:    restarted
+
+# END: P_tomcat
