@@ -1,0 +1,22 @@
+---
+
+- name: P_config 
+  hosts:        all
+  gather_facts: false
+  become:       true
+
+#  tasks:
+#  - name: task_run_whoami
+#    command:
+#      cmd: whoami
+
+  tasks:
+
+  - name: P_config_T_set_up_YUM_repo
+    template:
+      src:      ./open_three-tier-app.repo
+      dest:     /etc/yum.repos.d/open_three-tier-app.repo
+      mode:     0644
+
+
+
