@@ -96,17 +96,25 @@
 
 - name: P_postgres
   hosts:        appdbs
-  gather_facts: false
+  gather_facts: true
   become:       true
+
+#  vars:
+#    ansible_os_family: 'RedHat'
+
+  roles:
+    - role:     geerlingguy.postgresql
+      become:   yes
 
   tasks:
 
-  - name: P_postgresql_T_install
-    package:
-      name:     postgresql
-      state:    latest
-
 # instead of below better use: ansible-galaxy install geerlingguy.postgresql
+
+#  - name: P_postgresql_T_install
+#    package:
+#      name:     postgresql
+#      state:    latest
+
 #
 #  - name: P_postgresql_T_service
 #    service:
